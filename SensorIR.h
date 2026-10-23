@@ -9,6 +9,7 @@ public:
   void actualizar();          // llamar en cada loop()
   bool hayObjeto() const;     // estado estable actual
   bool huboCambio();          // true una sola vez cuando el estado cambió
+  void forzarPublicacion();   // marca el estado actual como pendiente de publicar
 
 private:
   uint8_t _pin;

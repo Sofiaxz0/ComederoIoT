@@ -35,3 +35,7 @@ bool SensorIR::huboCambio() {
   }
   return false;
 }
+
+void SensorIR::forzarPublicacion() {
+  _cambio = true;
+}

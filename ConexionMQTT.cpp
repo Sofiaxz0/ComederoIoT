@@ -6,11 +6,20 @@ static const unsigned long TIMEOUT_WIFI    = 15000;   // ms antes de reintentar 
 static const unsigned long INTERVALO_MQTT  = 5000;    // ms entre intentos MQTT
 
 ConexionMQTT::ConexionMQTT()
-  : _mqtt(_wifiClient), _tInicioWiFi(0), _tPunto(0), _tIntentoMQTT(0), _wifiOk(false) {}
+  : _mqtt(_wifiClient), _topicSub(nullptr), _tInicioWiFi(0), _tPunto(0), _tIntentoMQTT(0), _wifiOk(false) {}
 
 void ConexionMQTT::begin() {
   _mqtt.setServer(MQTT_SERVER, MQTT_PORT);
   _mqtt.setSocketTimeout(3);   // no esperar más de 3 s al broker
+
+  _mqtt.setCallback([this](char* topic, byte* payload, unsigned int length) {
+    if (!_cbMensaje) return;
+    String msg;
+    for (unsigned int i = 0; i < length; i++) msg += (char)payload[i];
+    msg.trim();
+    _cbMensaje(msg);
+  });
+
   iniciarWiFi();
 }
 
@@ -34,8 +43,13 @@ void ConexionMQTT::conectarMQTT() {
     ok = _mqtt.connect(MQTT_CLIENT_ID);
   }
 
-  if (ok) {
+    if (ok) {
     Serial.println("conectado");
+    if (_topicSub) {
+      _mqtt.subscribe(_topicSub, 1);
+      Serial.print("Suscrito a: ");
+      Serial.println(_topicSub);
+    }
   } else {
     Serial.print("fallo, rc=");
     Serial.println(_mqtt.state());
@@ -93,4 +107,9 @@ bool ConexionMQTT::conectado() {
 bool ConexionMQTT::publicar(const char* topic, const char* payload) {
   if (!_mqtt.connected()) return false;
   return _mqtt.publish(topic, payload);
+}
+
+void ConexionMQTT::suscribir(const char* topic, CallbackMensaje cb) {
+  _topicSub = topic;
+  _cbMensaje = cb;
 }
