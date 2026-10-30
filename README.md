@@ -4,7 +4,9 @@ Es un sistema IoT que detecta, con un sensor infrarrojo, si hay un objeto (comid
 Hardware:
 ESP32 (DevKit V1)
 Sensor infrarrojo de presencia (tipo FC-51)
-Alimentación: 3V3
+-> Alimentación: 3V3
+Servomotor GG90
+-> Alimentación 5v
 
 Software:
 Arduino IDE

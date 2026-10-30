@@ -18,8 +18,12 @@
 #define IR_DEBOUNCE_MS 50
 
 // ---------- Servo SG90 / Compuerta ----------
-#define MQTT_TOPIC_SERVO   "--"
-#define PIN_SERVO          19       
-#define SERVO_ANGULO_CERRADO  0
-#define SERVO_ANGULO_ABIERTO  90
-#define TIEMPO_ABIERTO_MS  10000UL   // 10 segundos
+#define MQTT_TOPIC_SERVO        "--"
+#define PIN_SERVO               19
+#define SERVO_ANGULO_CERRADO    0
+#define SERVO_ANGULO_ABIERTO    180
+#define SERVO_REPETICIONES      3       // cuántas veces abre y cierra
+#define SERVO_INTERVALO_MS      400     // ms en cada posición (no bajar de ~250)
+#define SERVO_PAUSA_ENTRE_MS    5000    // espera antes de aceptar otra secuencia
+#define PIN_SERVO         19
+#define TIEMPO_MOV_MS     600     // lo que tarda el servo en llegar a su posición

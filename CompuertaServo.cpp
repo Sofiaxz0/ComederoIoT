@@ -1,8 +1,11 @@
 #include "CompuertaServo.h"
 
-CompuertaServo::CompuertaServo(uint8_t pin, int anguloCerrado, int anguloAbierto, unsigned long tiempoAbiertoMs)
+CompuertaServo::CompuertaServo(uint8_t pin, int anguloCerrado, int anguloAbierto,
+                               uint8_t repeticiones, unsigned long intervaloMs, unsigned long pausaMs)
   : _pin(pin), _anguloCerrado(anguloCerrado), _anguloAbierto(anguloAbierto),
-    _tiempoAbiertoMs(tiempoAbiertoMs), _abierta(false), _cierre(false), _tApertura(0) {}
+    _repeticiones(repeticiones), _intervaloMs(intervaloMs), _pausaMs(pausaMs),
+    _moviendo(false), _esperandoPausa(false), _listo(false),
+    _paso(0), _tPaso(0), _tFin(0) {}
 
 void CompuertaServo::begin() {
   _servo.setPeriodHertz(50);
@@ -10,34 +13,50 @@ void CompuertaServo::begin() {
   _servo.write(_anguloCerrado);
 }
 
-void CompuertaServo::abrir() {
-  if (_abierta) return;            // mientras está abierta se ignora cualquier orden
-  _servo.write(_anguloAbierto);
-  _abierta = true;
-  _tApertura = millis();
-  Serial.println("Compuerta ABIERTA");
-}
+bool CompuertaServo::iniciar() {
+  // Mientras se mueve (o en pausa) se ignora cualquier orden
+  if (_moviendo || _esperandoPausa) return false;
 
-void CompuertaServo::cerrar() {
-  _servo.write(_anguloCerrado);
-  _abierta = false;
-  _cierre = true;
-  Serial.println("Compuerta CERRADA");
+  _moviendo = true;
+  _paso = 0;
+  _tPaso = millis();
+  _servo.write(_anguloAbierto);
+  Serial.println("Secuencia de compuerta: INICIO");
+  return true;
 }
 
 void CompuertaServo::actualizar() {
-  if (_abierta && (millis() - _tApertura) >= _tiempoAbiertoMs) {
-    cerrar();
+  unsigned long ahora = millis();
+
+  if (_moviendo && (ahora - _tPaso) >= _intervaloMs) {
+    _paso++;
+    _tPaso = ahora;
+
+    if (_paso >= _repeticiones * 2) {
+      // Terminó: el último paso ya dejó el servo cerrado
+      _moviendo = false;
+      _esperandoPausa = true;
+      _tFin = ahora;
+      Serial.println("Secuencia de compuerta: FIN");
+    } else {
+      // Pasos pares abren, impares cierran
+      _servo.write((_paso % 2 == 0) ? _anguloAbierto : _anguloCerrado);
+    }
+  }
+
+  if (_esperandoPausa && (ahora - _tFin) >= _pausaMs) {
+    _esperandoPausa = false;
+    _listo = true;
   }
 }
 
-bool CompuertaServo::estaAbierta() const {
-  return _abierta;
+bool CompuertaServo::estaMoviendo() const {
+  return _moviendo;
 }
 
-bool CompuertaServo::huboCierre() {
-  if (_cierre) {
-    _cierre = false;
+bool CompuertaServo::huboListo() {
+  if (_listo) {
+    _listo = false;
     return true;
   }
   return false;
