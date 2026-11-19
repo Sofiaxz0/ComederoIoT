@@ -22,8 +22,7 @@
         "y": 440,
         "wires": [
             [
-                "fc2735e50769770c",
-                "1b16af194a8f575c"
+                "fc2735e50769770c"
             ]
         ]
     },
@@ -38,74 +37,40 @@
         "rowsPerMsg": 1,
         "outputs": 1,
         "x": 510,
-        "y": 380,
+        "y": 440,
         "wires": [
             [
-                "81f369c8254e8991",
-                "de09540edfdcf14a"
+                "de09540edfdcf14a",
+                "7c5edad6dc2781d0"
             ]
         ]
-    },
-    {
-        "id": "1b16af194a8f575c",
-        "type": "debug",
-        "z": "f6f2187d.f17ca8",
-        "name": "debug 1",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 500,
-        "y": 500,
-        "wires": []
-    },
-    {
-        "id": "81f369c8254e8991",
-        "type": "debug",
-        "z": "f6f2187d.f17ca8",
-        "name": "debug 2",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 700,
-        "y": 500,
-        "wires": []
     },
     {
         "id": "ba236fcf03f8e432",
         "type": "ui_chart",
         "z": "f6f2187d.f17ca8",
         "name": "Sensor IR",
-        "group": "a0e8da1bca3d5d9d",
+        "group": "fc394fe299df300f",
         "order": 0,
-        "width": "6",
-        "height": "4",
-        "label": "chart",
-        "chartType": "bar",
+        "width": "0",
+        "height": "0",
+        "label": "Sensor IR",
+        "chartType": "line",
         "legend": "true",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
+        "xformat": "HH/mm/ss",
+        "interpolate": "step",
         "nodata": "",
         "dot": true,
         "ymin": "0",
         "ymax": "1",
-        "removeOlder": 1,
+        "removeOlder": "3",
         "removeOlderPoints": "",
-        "removeOlderUnit": "3600",
+        "removeOlderUnit": "1",
         "cutout": 0,
         "useOneColor": true,
         "useUTC": false,
         "colors": [
-            "#1f77b4",
+            "#6e2173",
             "#aec7e8",
             "#ff7f0e",
             "#2ca02c",
@@ -119,7 +84,7 @@
         "useDifferentColor": false,
         "className": "",
         "x": 900,
-        "y": 380,
+        "y": 480,
         "wires": [
             []
         ]
@@ -129,7 +94,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "function 2",
-        "func": "var filas = msg.payload;\n\nif (filas && filas.length > 0) {\n    var ultimaFila = filas[0];\n    msg.payload = ultimaFila.objeto ? 1 : 0;\n    msg.topic = ultimaFila.fecha;\n} else {\n    msg.payload = 0;\n}\n\nreturn msg;",
+        "func": "var filas = msg.payload;\n\nif (filas && filas.length > 0) {\n    var ultimaFila = filas[0];\n    msg.payload = ultimaFila.objeto ? 1 : 0;\n    msg.topic = \"Presencia\";\n} else {\n    msg.payload = 0;\n}\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -137,30 +102,12 @@
         "finalize": "",
         "libs": [],
         "x": 700,
-        "y": 380,
+        "y": 480,
         "wires": [
             [
-                "06d9e41bce648ba2",
                 "ba236fcf03f8e432"
             ]
         ]
-    },
-    {
-        "id": "06d9e41bce648ba2",
-        "type": "debug",
-        "z": "f6f2187d.f17ca8",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 880,
-        "y": 500,
-        "wires": []
     },
     {
         "id": "48d859fb7751a3d6",
@@ -188,7 +135,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "function 3",
-        "func": "// Función que determina cuando hay un objeto al frente o no (0 o 1)\n// si es 0 abre la compuerta (mueve el servo) sino no hace nada\n\n// conexión con mqtt out\n\nreturn msg;",
+        "func": "let fila = Array.isArray(msg.payload) ? msg.payload[0] : msg.payload;\n\nif (!fila) {\n    node.warn(\"Postgres no devolvió filas\");\n    return null;\n}\n\n// true -> 1 (abierto), false -> 0 (cerrado)\nmsg.payload = fila.objeto ? 1 : 0;\nmsg.topic = \"Compuerta\";\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -196,28 +143,132 @@
         "finalize": "",
         "libs": [],
         "x": 700,
-        "y": 120,
+        "y": 400,
         "wires": [
-            []
+            [
+                "4ece0a35e2a235d7"
+            ]
         ]
     },
     {
         "id": "4ece0a35e2a235d7",
         "type": "mqtt out",
         "z": "f6f2187d.f17ca8",
-        "name": "",
-        "topic": "",
-        "qos": "",
-        "retain": "",
+        "name": "Mqtt out",
+        "topic": "comedero/servo",
+        "qos": "1",
+        "retain": "false",
         "respTopic": "",
         "contentType": "",
         "userProps": "",
         "correl": "",
         "expiry": "",
         "broker": "b8690fef1a119df3",
-        "x": 890,
-        "y": 120,
+        "x": 900,
+        "y": 400,
         "wires": []
+    },
+    {
+        "id": "80d120a590dff8c8",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "ed2383f82e24b5c8",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "comedero/servo_posicion",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "b8690fef1a119df3",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 470,
+        "y": 340,
+        "wires": [
+            [
+                "2e97a07048189b9a"
+            ]
+        ]
+    },
+    {
+        "id": "2e97a07048189b9a",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "function 4",
+        "func": "const grados = Number(msg.payload);\nif (!Number.isFinite(grados)) return null;\nmsg.payload = grados;\nmsg.topic = \"Servo (°)\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 340,
+        "wires": [
+            [
+                "80d120a590dff8c8",
+                "ace4f592ed459486"
+            ]
+        ]
+    },
+    {
+        "id": "ace4f592ed459486",
+        "type": "ui_chart",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "group": "fc394fe299df300f",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "CompuertaServo",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "step",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "90",
+        "removeOlder": "3",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "1",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 930,
+        "y": 340,
+        "wires": [
+            []
+        ]
     },
     {
         "id": "cdf542529e48e034",
@@ -245,7 +296,7 @@
         "passwordEnv": ""
     },
     {
-        "id": "a0e8da1bca3d5d9d",
+        "id": "fc394fe299df300f",
         "type": "ui_group",
         "name": "Default",
         "tab": "0b61d2fea7c77fb1",
@@ -295,7 +346,7 @@
         "hidden": false
     },
     {
-        "id": "fb7ea204aaa2995b",
+        "id": "2518fef35dfb6f3b",
         "type": "global-config",
         "env": [],
         "modules": {
