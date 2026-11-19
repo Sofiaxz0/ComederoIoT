@@ -30,6 +30,12 @@ void loop() {
   sensor.actualizar();
   compuerta.actualizar();
 
+  if (mqtt.conectado() && compuerta.huboMovimiento()) {
+  char buf[8];
+  snprintf(buf, sizeof(buf), "%d", compuerta.angulo());
+  mqtt.publicar(MQTT_TOPIC_SERVO_POS, buf);
+}
+
   // Al terminar la secuencia y la pausa, vuelve a publicar el estado del sensor
   // para que Node-RED decida de nuevo si repite o no.
   if (compuerta.huboListo()) {

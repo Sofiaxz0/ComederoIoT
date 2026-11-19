@@ -12,6 +12,8 @@ public:
   void actualizar();         // llamar en cada loop()
   bool estaMoviendo() const;
   bool huboListo();          // true una sola vez cuando terminó y pasó la pausa
+  bool huboMovimiento();   // true una vez por cada movimiento
+  int  angulo() const;
 
 private:
   Servo _servo;
@@ -21,6 +23,9 @@ private:
   uint8_t _repeticiones;
   unsigned long _intervaloMs;
   unsigned long _pausaMs;
+  void mover(int grados);  // todos los _servo.write() pasan por aquí
+  bool _cambio = false;
+  int  _angulo = 0;
 
   bool _moviendo;
   bool _esperandoPausa;

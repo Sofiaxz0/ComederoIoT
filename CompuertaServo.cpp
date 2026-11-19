@@ -5,12 +5,20 @@ CompuertaServo::CompuertaServo(uint8_t pin, int anguloCerrado, int anguloAbierto
   : _pin(pin), _anguloCerrado(anguloCerrado), _anguloAbierto(anguloAbierto),
     _repeticiones(repeticiones), _intervaloMs(intervaloMs), _pausaMs(pausaMs),
     _moviendo(false), _esperandoPausa(false), _listo(false),
-    _paso(0), _tPaso(0), _tFin(0) {}
+    _paso(0), _tPaso(0), _tFin(0),
+    _cambio(false), _angulo(anguloCerrado) {}
+
+// Todos los movimientos del servo pasan por aquí: así se registra cada ángulo
+void CompuertaServo::mover(int grados) {
+  _servo.write(grados);
+  _angulo = grados;
+  _cambio = true;
+}
 
 void CompuertaServo::begin() {
   _servo.setPeriodHertz(50);
   _servo.attach(_pin, 500, 2400);
-  _servo.write(_anguloCerrado);
+  mover(_anguloCerrado);   // posición inicial; también se publica
 }
 
 bool CompuertaServo::iniciar() {
@@ -20,7 +28,7 @@ bool CompuertaServo::iniciar() {
   _moviendo = true;
   _paso = 0;
   _tPaso = millis();
-  _servo.write(_anguloAbierto);
+  mover(_anguloAbierto);
   Serial.println("Secuencia de compuerta: INICIO");
   return true;
 }
@@ -40,7 +48,7 @@ void CompuertaServo::actualizar() {
       Serial.println("Secuencia de compuerta: FIN");
     } else {
       // Pasos pares abren, impares cierran
-      _servo.write((_paso % 2 == 0) ? _anguloAbierto : _anguloCerrado);
+      mover((_paso % 2 == 0) ? _anguloAbierto : _anguloCerrado);
     }
   }
 
@@ -60,4 +68,17 @@ bool CompuertaServo::huboListo() {
     return true;
   }
   return false;
+}
+
+// Devuelve true una vez por cada movimiento del servo
+bool CompuertaServo::huboMovimiento() {
+  if (_cambio) {
+    _cambio = false;
+    return true;
+  }
+  return false;
+}
+
+int CompuertaServo::angulo() const {
+  return _angulo;
 }
